@@ -1,6 +1,6 @@
 from airflow.decorators import dag, task
 from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryCreateEmptyDatasetOperator, LocalFilesystemToGCSOperator,
+    BigQueryCreateEmptyDatasetOperator,
     BigQueryInsertJobOperator
 )
 from datetime import datetime
@@ -13,6 +13,7 @@ import redis
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+# Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
 
 BASE_URL = os.getenv("BASE_URL")
@@ -23,6 +24,7 @@ MEMORSTORE_HOST = os.getenv("MEMORSTORE_HOST")
 MEMORSTORE_PORT = int(os.getenv("MEMORSTORE_PORT"))
 MEMORSTORE_PASSWORD = os.getenv("MEMORSTORE_PASSWORD")
 
+# Configuração do Redis (Memorystore)
 redis_client = redis.StrictRedis(
     host=MEMORSTORE_HOST,
     port=MEMORSTORE_PORT,
@@ -44,35 +46,45 @@ def erp_bi_data_extraction_with_parquet():
     @task
     def process_local_guest_checks(file_path: str, bus_date: str, store_id: str):
         """
-        Processa o arquivo ERP.JSON local de guest checks, converte para Parquet e prepara para envio ao GCS.
+        Processa o arquivo ERP.JSON local de guest checks e converte para Parquet.
         """
         print(f"Lendo o arquivo local: {file_path}")
         data = pd.read_json(file_path)
 
         data_type = "guest_checks"
         category = "api"
-        gcs_path = f"data-lake/raw/{category}/{data_type}/{bus_date[:4]}/{bus_date[5:7]}/store_{store_id}/{data_type}_store_{store_id}_{bus_date}.parquet"
         local_parquet_file = f"/tmp/{data_type}_store_{store_id}_{bus_date}.parquet"
 
         print(f"Convertendo dados para Parquet...")
         table = pa.Table.from_pandas(data)
         pq.write_table(table, local_parquet_file)
 
-        upload_task = LocalFilesystemToGCSOperator(
-            task_id="upload_parquet_to_gcs",
-            src=local_parquet_file,
-            dst=gcs_path,
-            bucket=BUCKET_NAME,
-            gcp_conn_id='gcp',
-            mime_type='application/octet-stream',
-        )
-
         return {
-            "gcs_path": gcs_path,
+            "local_file": local_parquet_file,
             "data_type": data_type,
+            "category": category,
             "store_id": store_id,
             "bus_date": bus_date,
-            "local_file": local_parquet_file,
+        }
+
+    @task
+    def upload_parquet_to_gcs(local_data):
+        """
+        Faz o upload de um arquivo Parquet local para o Google Cloud Storage.
+        """
+        gcs_path = f"data-lake/raw/{local_data['category']}/{local_data['data_type']}/{local_data['bus_date'][:4]}/{local_data['bus_date'][5:7]}/store_{local_data['store_id']}/{local_data['data_type']}_store_{local_data['store_id']}_{local_data['bus_date']}.parquet"
+        client = storage.Client()
+        bucket = client.bucket(BUCKET_NAME)
+        blob = bucket.blob(gcs_path)
+        with open(local_data['local_file'], 'rb') as f:
+            blob.upload_from_file(f)
+
+        print(f"Arquivo enviado para o GCS: {gcs_path}")
+        return {
+            "gcs_path": gcs_path,
+            "data_type": local_data["data_type"],
+            "store_id": local_data["store_id"],
+            "bus_date": local_data["bus_date"],
         }
 
     @task
@@ -112,7 +124,7 @@ def erp_bi_data_extraction_with_parquet():
             "gcs_path": gcs_path,
             "data_type": data_type,
             "bus_date": bus_date,
-            "store_id": store_id
+            "store_id": store_id,
         }
 
     create_bigquery_dataset = BigQueryCreateEmptyDatasetOperator(
@@ -163,18 +175,21 @@ def erp_bi_data_extraction_with_parquet():
                         "sourceFormat": "PARQUET",
                         "writeDisposition": "WRITE_APPEND",
                     }
-                }
+                },
             )
 
+    # Configuração de operação
     operation_date = "2024-05-05"
     local_file_path = "/usr/local/airflow/docs/ERP.json"
     store_id = "001"
 
+    # Execução das tarefas
     fetched_data = process_all_endpoints(operation_date)
-
     local_data = process_local_guest_checks(local_file_path, operation_date, store_id)
+    uploaded_local_data = upload_parquet_to_gcs(local_data)
 
-    upload_to_bigquery(fetched_data, local_data) >> create_bigquery_dataset
+    # Upload para o BigQuery
+    upload_to_bigquery([*fetched_data, uploaded_local_data]) >> create_bigquery_dataset
 
 
 erp_bi_data_extraction_with_parquet_dag = erp_bi_data_extraction_with_parquet()
