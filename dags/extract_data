@@ -38,14 +38,43 @@ redis_client = redis.StrictRedis(
 )
 def erp_bi_data_extraction_with_parquet():
     """
-    Pipeline de extração de dados de APIs,
+    Pipeline de extração de dados de APIs e do arquivo ERP.json,
     com armazenamento no GCS (formato Parquet) e carregamento no BigQuery.
     """
+    @task
+    def process_local_guest_checks(file_path: str, bus_date: str, store_id: str):
+        """
+        Processa o arquivo ERP.JSON local de guest checks, converte para Parquet e envia para o GCS.
+        """
+        print(f"Lendo o arquivo local: {file_path}")
+        data = pd.read_json(file_path)
+
+        data_type = "guest_checks"
+        category = "api"
+        gcs_path = f"data-lake/raw/{category}/{data_type}/{bus_date[:4]}/{bus_date[5:7]}/store_{store_id}/{data_type}_store_{store_id}_{bus_date}.parquet"
+
+        print(f"Convertendo dados para Parquet...")
+        table = pa.Table.from_pandas(data)
+        buffer = pa.BufferOutputStream()
+        pq.write_table(table, buffer)
+
+        print(f"Enviando para o GCS: {gcs_path}")
+        client = storage.Client()
+        bucket = client.bucket(BUCKET_NAME)
+        blob = bucket.blob(gcs_path)
+        blob.upload_from_string(buffer.getvalue().to_pybytes(), content_type="application/octet-stream")
+
+        return {
+            "gcs_path": gcs_path,
+            "data_type": data_type,
+            "store_id": store_id,
+            "bus_date": bus_date,
+        }
 
     @task
     def fetch_and_store_data(endpoint: str, store_id: str, bus_date: str, data_type: str, category: str):
         """
-        Consome dados de uma API e armazena no Google Cloud Storage em formato Parquet.
+        Consome dados da API e armazena no Google Cloud Storage em formato Parquet.
         """
         cache_key = f"{endpoint.strip('/')}_{store_id}_{bus_date}"
         cached_data = redis_client.get(cache_key)
@@ -131,10 +160,15 @@ def erp_bi_data_extraction_with_parquet():
                 }
             )
 
-    operation_date = "2024-11-01"  
+    operation_date = "2024-11-01"
+    local_file_path = "/usr/local/airflow/docs/ERP.json"
+    store_id = "001"
 
     fetched_data = process_all_endpoints(operation_date)
-    upload_to_bigquery(fetched_data) >> create_bigquery_dataset
+
+    local_data = process_local_guest_checks(local_file_path, operation_date, store_id)
+
+    upload_to_bigquery(fetched_data, local_data) >> create_bigquery_dataset
 
 
 erp_bi_data_extraction_with_parquet_dag = erp_bi_data_extraction_with_parquet()
