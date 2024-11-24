@@ -1,6 +1,6 @@
 from airflow.decorators import dag, task
 from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryCreateEmptyDatasetOperator,
+    BigQueryCreateEmptyDatasetOperator, LocalFilesystemToGCSOperator,
     BigQueryInsertJobOperator
 )
 from datetime import datetime
@@ -44,7 +44,7 @@ def erp_bi_data_extraction_with_parquet():
     @task
     def process_local_guest_checks(file_path: str, bus_date: str, store_id: str):
         """
-        Processa o arquivo ERP.JSON local de guest checks, converte para Parquet e envia para o GCS.
+        Processa o arquivo ERP.JSON local de guest checks, converte para Parquet e prepara para envio ao GCS.
         """
         print(f"Lendo o arquivo local: {file_path}")
         data = pd.read_json(file_path)
@@ -52,23 +52,27 @@ def erp_bi_data_extraction_with_parquet():
         data_type = "guest_checks"
         category = "api"
         gcs_path = f"data-lake/raw/{category}/{data_type}/{bus_date[:4]}/{bus_date[5:7]}/store_{store_id}/{data_type}_store_{store_id}_{bus_date}.parquet"
+        local_parquet_file = f"/tmp/{data_type}_store_{store_id}_{bus_date}.parquet"
 
         print(f"Convertendo dados para Parquet...")
         table = pa.Table.from_pandas(data)
-        buffer = pa.BufferOutputStream()
-        pq.write_table(table, buffer)
+        pq.write_table(table, local_parquet_file)
 
-        print(f"Enviando para o GCS: {gcs_path}")
-        client = storage.Client()
-        bucket = client.bucket(BUCKET_NAME)
-        blob = bucket.blob(gcs_path)
-        blob.upload_from_string(buffer.getvalue().to_pybytes(), content_type="application/octet-stream")
+        upload_task = LocalFilesystemToGCSOperator(
+            task_id="upload_parquet_to_gcs",
+            src=local_parquet_file,
+            dst=gcs_path,
+            bucket=BUCKET_NAME,
+            gcp_conn_id='gcp',
+            mime_type='application/octet-stream',
+        )
 
         return {
             "gcs_path": gcs_path,
             "data_type": data_type,
             "store_id": store_id,
             "bus_date": bus_date,
+            "local_file": local_parquet_file,
         }
 
     @task
@@ -113,7 +117,8 @@ def erp_bi_data_extraction_with_parquet():
 
     create_bigquery_dataset = BigQueryCreateEmptyDatasetOperator(
         task_id="create_bigquery_dataset",
-        dataset_id=DATASET_NAME,
+        dataset_id='retail',
+        gcp_conn_id='gcp',
         exists_ok=True,
     )
 
@@ -146,6 +151,7 @@ def erp_bi_data_extraction_with_parquet():
         for result in results:
             BigQueryInsertJobOperator(
                 task_id=f"load_{result['data_type']}_{result['store_id']}",
+                gcp_conn_id='gcp',
                 configuration={
                     "load": {
                         "sourceUris": [f"gs://{BUCKET_NAME}/{result['gcs_path']}"],
@@ -160,7 +166,7 @@ def erp_bi_data_extraction_with_parquet():
                 }
             )
 
-    operation_date = "2024-11-01"
+    operation_date = "2024-05-05"
     local_file_path = "/usr/local/airflow/docs/ERP.json"
     store_id = "001"
 
