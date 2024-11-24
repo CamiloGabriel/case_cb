@@ -100,11 +100,11 @@ def erp_bi_data_extraction_with_parquet():
         Processa todos os endpoints para todas as lojas.
         """
         endpoints = {
-            "/bi/getFiscalInvoice": ("fiscal_invoices", "bi"),
-            "/res/getGuestChecks": ("guest_checks", "bi"),
-            "/org/getChargeBack": ("chargebacks", "bi"),
-            "/trans/getTransactions": ("transactions", "bi"),
-            "/inv/getCashManagementDetails": ("cash_management", "bi"),
+            "/bi/getFiscalInvoice": ("fiscal_invoices", "api"),
+            "/res/getGuestChecks": ("guest_checks", "api"),
+            "/org/getChargeBack": ("chargebacks", "api"),
+            "/trans/getTransactions": ("transactions", "api"),
+            "/inv/getCashManagementDetails": ("cash_management", "api"),
         }
         store_ids = ["001", "002", "003"]
 
