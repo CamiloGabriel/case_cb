@@ -13,7 +13,6 @@ import redis
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-# Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
 
 BASE_URL = os.getenv("BASE_URL")
@@ -24,7 +23,6 @@ MEMORSTORE_HOST = os.getenv("MEMORSTORE_HOST")
 MEMORSTORE_PORT = int(os.getenv("MEMORSTORE_PORT"))
 MEMORSTORE_PASSWORD = os.getenv("MEMORSTORE_PASSWORD")
 
-# Configuração do Redis (Memorystore)
 redis_client = redis.StrictRedis(
     host=MEMORSTORE_HOST,
     port=MEMORSTORE_PORT,
@@ -156,10 +154,11 @@ def erp_bi_data_extraction_with_parquet():
         return results
 
     @task
-    def upload_to_bigquery(results):
+    def upload_to_bigquery(fetched_data, uploaded_local_data):
         """
         Carrega os dados do GCS para o BigQuery.
         """
+        results = [*fetched_data, uploaded_local_data]  
         for result in results:
             BigQueryInsertJobOperator(
                 task_id=f"load_{result['data_type']}_{result['store_id']}",
@@ -178,18 +177,31 @@ def erp_bi_data_extraction_with_parquet():
                 },
             )
 
-    # Configuração de operação
+
     operation_date = "2024-05-05"
     local_file_path = "/usr/local/airflow/docs/ERP.json"
     store_id = "001"
 
-    # Execução das tarefas
-    fetched_data = process_all_endpoints(operation_date)
+#     fetched_data = process_all_endpoints(operation_date)
+#     local_data = process_local_guest_checks(local_file_path, operation_date, store_id)
+#     uploaded_local_data = upload_parquet_to_gcs(local_data)
+
+#     upload_to_bigquery(fetched_data, uploaded_local_data) >> create_bigquery_dataset
+
+# Esse é um fluxo de execução das tasks onde uma task depende da outra, nesse caso, o arquivo JSON que foi transformado em Parquet só será carregado no Bigquery após que extrai dados dos endpoints ser concluída com sucesso. Dessa forma, é possível obter uma maior escalabilidade, isolmento de falhas, etc. Porém, para verificar se a pipeline está funcional, será usado o fluxo abaixo:
+
+
     local_data = process_local_guest_checks(local_file_path, operation_date, store_id)
     uploaded_local_data = upload_parquet_to_gcs(local_data)
 
-    # Upload para o BigQuery
-    upload_to_bigquery([*fetched_data, uploaded_local_data]) >> create_bigquery_dataset
+    
+    upload_to_bigquery([uploaded_local_data], None)  
+
+    
+    fetched_data = process_all_endpoints(operation_date)
+    upload_to_bigquery(fetched_data, None)  
+
+    create_bigquery_dataset
 
 
 erp_bi_data_extraction_with_parquet_dag = erp_bi_data_extraction_with_parquet()
