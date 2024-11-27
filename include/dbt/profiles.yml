@@ -1,6 +1,6 @@
 retail:
- target: dev
- outputs:
+  target: dev
+  outputs:
   dev:
     type: bigquery
     method: service-account

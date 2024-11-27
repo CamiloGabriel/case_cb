@@ -1,0 +1,21 @@
+[0m02:44:44.886013 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001DEA8E71BB0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001DEA6561850>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001DEA65ED3A0>]}
+
+
+============================== 02:44:44.892227 | 85ec0cf5-d8cb-43e2-8709-459a01cdf721 ==============================
+[0m02:44:44.892227 [info ] [MainThread]: Running with dbt=1.9.0-b2
+[0m02:44:44.894461 [debug] [MainThread]: running dbt with arguments {'use_colors': 'True', 'cache_selected_only': 'False', 'debug': 'False', 'introspect': 'True', 'use_experimental_parser': 'False', 'static_parser': 'True', 'warn_error': 'None', 'printer_width': '80', 'write_json': 'True', 'version_check': 'True', 'warn_error_options': 'WarnErrorOptions(include=[], exclude=[])', 'empty': 'None', 'indirect_selection': 'eager', 'fail_fast': 'False', 'partial_parse': 'True', 'log_path': 'logs', 'log_cache_events': 'False', 'log_format': 'default', 'quiet': 'False', 'target_path': 'None', 'no_print': 'None', 'send_anonymous_usage_stats': 'True', 'profiles_dir': 'C:\\Users\\camil\\.dbt', 'invocation_command': 'dbt test'}
+[0m02:44:44.895677 [error] [MainThread]: Encountered an error:
+Runtime Error
+  No dbt_project.yml found at expected path C:\Users\camil\workspace\case_cb\dbt_project.yml
+  Verify that each entry within packages.yml (and their transitive dependencies) contains a file named dbt_project.yml
+  
+[0m02:44:44.898709 [debug] [MainThread]: Command `dbt test` failed at 02:44:44.898709 after 0.21 seconds
+[0m02:44:44.900249 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001DEA8C2CB00>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001DEA8C2F9E0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001DEA8C2EEA0>]}
+[0m02:44:44.900249 [debug] [MainThread]: Flushing usage events
+[0m02:44:46.224620 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m02:59:32.245650 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000026FFB4D2E10>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000026FF7D66AB0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x0000026FF8FA1220>]}
+
+
+============================== 02:59:32.252395 | 84e3d700-aa0b-4832-9718-612e611e2126 ==============================
+[0m02:59:32.252395 [info ] [MainThread]: Running with dbt=1.9.0-b2
+[0m02:59:32.254393 [debug] [MainThread]: running dbt with arguments {'empty': 'None', 'log_path': 'logs', 'use_colors': 'True', 'indirect_selection': 'eager', 'version_check': 'True', 'partial_parse': 'True', 'quiet': 'False', 'log_format': 'default', 'use_experimental_parser': 'False', 'static_parser': 'True', 'warn_error': 'None', 'log_cache_events': 'False', 'write_json': 'True', 'printer_width': '80', 'warn_error_options': 'WarnErrorOptions(include=[], exclude=[])', 'target_path': 'None', 'fail_fast': 'False', 'introspect': 'True', 'cache_selected_only': 'False', 'no_print': 'None', 'send_anonymous_usage_stats': 'True', 'debug': 'False', 'profiles_dir': 'C:\\Users\\camil\\.dbt', 'invocation_command': 'dbt init'}

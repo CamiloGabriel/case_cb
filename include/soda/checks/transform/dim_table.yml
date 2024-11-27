@@ -1,0 +1,16 @@
+checks:
+  - row_count > 0
+  - schema:
+      fields:
+        - table_id: string
+        - table_name: string
+        - latest_guest_check_id: string
+  - duplicate_count(table_id) = 0
+  - completeness:
+      - table_id
+      - table_name
+  - validity:
+      table_id: not_null
+      latest_guest_check_id: not_null
+
+

@@ -1,0 +1,24 @@
+table_name: raw_taxes
+
+metrics:
+  - row_count
+  - missing_count
+  - duplicate_count
+  - min
+  - max
+
+columns:
+  tax_id:
+    checks:
+      - uniqueness: 100%
+      - missing_count == 0
+  tax_rate:
+    checks:
+      - min > 0
+      - max <= 100
+  taxable_sales_total:
+    checks:
+      - min >= 0
+  tax_collected:
+    checks:
+      - min >= 0

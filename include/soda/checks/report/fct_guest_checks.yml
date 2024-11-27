@@ -1,0 +1,29 @@
+checks:
+  - table_exists:
+      name: "fct_guest_checks exists"
+  - row_count > 0:
+      name: "fct_guest_checks has rows"
+  - freshness(timestamp_column: datetime_id):
+      warn: 2d
+      fail: 5d
+      name: "fct_guest_checks is fresh"
+  - column:
+      guest_check_id:
+        valid_percent: 100
+        unique_count > 0:
+          name: "guest_check_id is unique"
+  - column:
+      check_total:
+        valid_percent: 100
+        avg > 0:
+          name: "check_total has valid average"
+  - column:
+      total_quantity:
+        valid_percent: 100
+        sum > 0:
+          name: "total_quantity has positive sum"
+  - column:
+      total_sales:
+        valid_percent: 100
+        sum > 0:
+          name: "total_sales has positive sum"

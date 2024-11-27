@@ -1,0 +1,18 @@
+table_name: raw_restaurant
+
+metrics:
+  - row_count
+  - missing_count
+  - duplicate_count
+
+columns:
+  restaurant_id:
+    checks:
+      - uniqueness: 100%
+      - missing_count == 0
+  region:
+    checks:
+      - missing_count < 5%
+  city:
+    checks:
+      - missing_count < 5%

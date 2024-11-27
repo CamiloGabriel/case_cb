@@ -1,0 +1,20 @@
+checks:
+  - row_count > 0  # Garantir que a tabela não está vazia
+  - schema:
+      fields:
+        - datetime_id: timestamp
+        - date: date
+        - year: int
+        - month: int
+        - day: int
+        - hour: int
+        - minute: int
+        - is_weekend: boolean
+  - freshness(datetime_id): last_7_days  # Verifica se os dados são recentes
+  - validity:
+      year: 
+        min: 2000
+      month: between(1, 12)
+      day: between(1, 31)
+      hour: between(0, 23)
+      minute: between(0, 59)

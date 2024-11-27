@@ -1,0 +1,15 @@
+table_name: raw_table
+
+metrics:
+  - row_count
+  - missing_count
+  - duplicate_count
+
+columns:
+  table_number:
+    checks:
+      - uniqueness: 100%
+      - missing_count == 0
+  table_name:
+    checks:
+      - missing_count < 10%

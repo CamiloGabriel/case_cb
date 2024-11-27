@@ -1,0 +1,19 @@
+checks:
+    - row_count > 0
+    - schema:
+        fields:
+            - tax_id: string
+            - avg_tax_rate: decimal
+            - total_taxable_sales: decimal
+            - total_tax_collected: decimal
+            - tax_type: string
+    - duplicate_count(tax_id) = 0
+    - validity:
+        avg_tax_rate: between(0, 100)  # Taxas de imposto devem estar entre 0% e 100%
+        total_taxable_sales: 
+            min: 0
+        total_tax_collected: 
+            min: 0
+    - completeness:
+        - tax_id
+        - avg_tax_rate

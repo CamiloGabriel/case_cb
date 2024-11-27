@@ -1,0 +1,24 @@
+checks:
+    - table_exists:
+        name: "Regional Revenue Analysis exists"
+    - row_count > 0:
+        name: "Regional Revenue Analysis has rows"
+    - column:
+        num_guest_checks:
+            valid_percent: 100
+            min > 0:
+            name: "num_guest_checks is positive"
+    - column:
+        total_items_sold:
+            valid_percent: 100
+            sum > 0:
+            name: "total_items_sold is positive"
+    - column:
+        total_revenue:
+            valid_percent: 100
+            sum > 0:
+            name: "total_revenue is positive"
+    - column:
+        region:
+            distinct_count > 0:
+            name: "region has distinct values"

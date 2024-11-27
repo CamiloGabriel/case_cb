@@ -1,0 +1,10 @@
+checks:
+  - row_count > 0  # Garantir que a tabela não está vazia
+  schema:
+    columns:
+      - restaurant_id
+      - region
+      - city
+      - name
+  - duplicate_count(restaurant_id) = 0  # Verifica se não há duplicatas
+

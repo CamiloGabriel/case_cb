@@ -5,5 +5,4 @@ sources:
     database: 'case-cb'
 
     tables:
-        - name: raw_invoices
-        - name: raw_country
+        - name: raw_guest_checks

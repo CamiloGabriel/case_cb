@@ -1,0 +1,18 @@
+table_name: raw_employee
+
+metrics:
+  - row_count
+  - missing_count
+  - duplicate_count
+
+columns:
+  employee_id:
+    checks:
+      - uniqueness: 100%
+      - missing_count == 0
+  check_employee_id:
+    checks:
+      - missing_count < 10%
+  position:
+    checks:
+      - missing_count < 20%

@@ -1,0 +1,10 @@
+checks:
+  - row_count > 0
+  - schema:
+      fields:
+        - employee_id: string
+        - check_employee_id: string
+        - name: string
+        - position: string
+  - duplicate_count(employee_id) = 0  # Verifica duplicatas
+

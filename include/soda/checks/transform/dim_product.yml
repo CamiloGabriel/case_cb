@@ -1,0 +1,20 @@
+checks:
+  - row_count > 0
+  - schema:
+      fields:
+        - product_id: string
+        - name: string
+        - category: string
+        - avg_price_including_tax: decimal
+        - max_price_level: int
+        - active_taxes: string
+        - is_modified: boolean
+  - duplicate_count(product_id) = 0  # Verifica duplicatas no product_id
+  - completeness:
+      - product_id
+      - name
+      - category
+  - validity:
+      avg_price_including_tax: 
+        min: 0  # Nenhum preço deve ser negativo
+      max_price_level: between(1, 5)  # Supondo níveis de preço entre 1 e 5

@@ -1,0 +1,21 @@
+table_name: raw_datetime
+
+metrics:
+  - row_count
+  - missing_count
+  - duplicate_count
+
+columns:
+  datetime_id:
+    checks:
+      - uniqueness: 100%
+      - missing_count == 0
+  year:
+    checks:
+      - missing_count == 0
+      - min >= 2000
+  month:
+    checks:
+      - missing_count == 0
+      - min >= 1
+      - max <= 12

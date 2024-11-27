@@ -1,10 +1,21 @@
--- StockCode isn't unique, a product with the same id can have different and prices
--- Create the dimension table
-SELECT DISTINCT
-    {{ dbt_utils.generate_surrogate_key(['StockCode', 'Description', 'UnitPrice']) }} as product_id,
-		StockCode AS stock_code,
-    Description AS description,
-    UnitPrice AS price
-FROM {{ source('retail', 'raw_invoices') }}
-WHERE StockCode IS NOT NULL
-AND UnitPrice > 0
+WITH base_product AS (
+    SELECT DISTINCT
+        product_id,
+        name,
+        category,
+        AVG(price_including_tax) AS avg_price_including_tax,
+        MAX(price_level) AS max_price_level,
+        MAX(active_taxes) AS active_taxes,
+        MAX(is_modified) AS is_modified
+    FROM {{ ref('raw_product') }}
+    GROUP BY product_id, name, category
+)
+SELECT
+    product_id,
+    name,
+    category,
+    avg_price_including_tax,
+    max_price_level,
+    active_taxes,
+    is_modified
+FROM base_product;

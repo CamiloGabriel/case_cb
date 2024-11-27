@@ -1,0 +1,19 @@
+checks:
+    - table_exists:
+        name: "Employee Revenue Analysis exists"
+    - row_count > 0:
+        name: "Employee Revenue Analysis has rows"
+    - column:
+        employee_id:
+            valid_percent: 100
+            unique_count > 0:
+            name: "employee_id is unique"
+    - column:
+        total_revenue:
+            valid_percent: 100
+            sum > 0:
+            name: "total_revenue is positive"
+    - column:
+        year:
+            distinct_count > 0:
+            name: "year has distinct values"

@@ -1,0 +1,18 @@
+checks for raw_guest_checks:
+  - schema:
+      name: Confirmar se as colunas existem
+      warn:
+        when required column missing: [chkNum, opnBusDt, opnUTC, opnLcl, clsdBusDt, clsdUTC, clsdLcl, lastTransUTC, lastTransLcl, lastUpdatedUTC, lastUpdatedLcl, clsdFlag, gstCnt, subTtl, nonTxblSlsTtl, chkTtl, dscTtl, payTtl, balDueTtl, otNum, ocNum, tblNum, tblName, empNum, numSrvcRd, numChkPrntd,txblSlsTtl, taxCollTtl, taxRate, type, rvcNum, dtlOtNum, dtlOcNum, lineNum, dtlId, detailUTC, detailLcl, lastUpdateUTC, lastUpdateLcl, busDt, wsNum, dspTtl, dspQty, aggTtl, chkEmpId, chkEmpNum, svcRndNum, seatNum, modFlag, inclTax, activeTaxes, prcLvl]
+      fail:
+        when required column missing:
+        - curUTC
+        - locRef
+        - guestCheckId
+        - taxNum
+        - guestCheckLineItemId
+        - miNum
+
+
+
+
+
